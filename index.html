@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Atendify - Điểm danh Thông minh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Main Logo / Header -->
+        <div class="header fade-in">
+            <h1>Atendify</h1>
+            <p>Nền tảng Điểm danh Thông minh bằng AI & Vị trí</p>
+        </div>
+
+        <!-- Section: Authentication -->
+        <div id="auth-section" class="auth-container glass-panel fade-in">
+            <div class="card-title">Đăng nhập / Đăng ký</div>
+            
+            <div id="phone-container">
+                <div class="input-group">
+                    <label for="phone-input">Số điện thoại</label>
+                    <input type="tel" id="phone-input" class="input-field" placeholder="+84 987 654 321" />
+                </div>
+                <!-- Vùng chứa ReCaptcha của Firebase -->
+                <div id="recaptcha-container"></div>
+                
+                <button id="send-code-btn" class="btn mt-4">Tiếp tục bằng SMS</button>
+            </div>
+
+            <div id="otp-container" class="hidden">
+                <div class="input-group">
+                    <label for="otp-input">Mã xác thực (OTP)</label>
+                    <input type="text" id="otp-input" class="input-field" placeholder="Nhập 6 số gửi tới điện thoại" maxlength="6" />
+                </div>
+                <button id="verify-code-btn" class="btn">Xác thực</button>
+                <button id="back-to-phone-btn" class="btn mt-2" style="background:transparent; color: var(--text-secondary); box-shadow: none">Quay lại</button>
+            </div>
+            
+            <!-- Setup Profile UI (if new user) -->
+            <div id="profile-container" class="hidden">
+                <div class="input-group">
+                    <label for="fullname-input">Họ và tên</label>
+                    <input type="text" id="fullname-input" class="input-field" placeholder="Ví dụ: Nguyễn Văn A" />
+                </div>
+                <button id="save-profile-btn" class="btn">Hoàn tất thiết lập</button>
+            </div>
+        </div>
+
+        <!-- Section: Main App View (After Login) -->
+        <div id="user-dashboard" class="hidden fade-in" style="max-width: 500px; margin: 0 auto;">
+            <div class="glass-panel text-center mb-4">
+                <h3 id="user-greeting" style="font-size: 1.5rem; margin-bottom: 0.5rem;">Xin chào!</h3>
+                <p id="user-role-text" class="text-secondary">Trạng thái: Sẵn sàng điểm danh</p>
+                <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn" id="scan-qr-btn">📷 Quét QR Điểm Danh</button>
+                    <button class="btn" id="logout-btn" style="background: rgba(255,255,255,0.05); color: #fff;">Đăng xuất</button>
+                </div>
+            </div>
+
+            <!-- Scanner View -->
+            <div id="scanner-view" class="glass-panel hidden text-center">
+                <div class="card-title" style="justify-content: center;">Quét mã QR Sự kiện</div>
+                <p class="text-secondary mb-4">Đưa camera quét mã QR của hội trường, hệ thống sẽ tự động xác minh vị trí của bạn.</p>
+                
+                <div id="video-container" style="background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;">
+                    <span id="camera-loading" style="color: var(--text-secondary)">Đang mở camera...</span>
+                    <!-- video sẽ được code js render -->
+                    <video id="qr-video" style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                </div>
+                
+                <div id="location-status" class="mt-4" style="color: var(--success-color); font-size: 0.9rem; display: none;">
+                    📍 Đã xác định vị trí hợp lệ
+                </div>
+
+                <div id="selfie-container" class="hidden mt-4">
+                    <p class="text-secondary mb-4">Mã QR chính xác! Vui lòng chụp bức ảnh tại sự kiện để hoàn tất điểm danh.</p>
+                    <button id="take-selfie-btn" class="btn">📸 Chụp ảnh ngay</button>
+                </div>
+
+                <button id="cancel-scan-btn" class="btn mt-4" style="background: var(--error-color)">Hủy thao tác</button>
+            </div>
+            
+            <div id="admin-link-container" class="text-center mt-4 hidden">
+                <a href="admin.html" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">Chuyển sang Giao diện Admin &rarr;</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <!-- Thư viện giải mã QR (jsQR) lấy từ CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script type="module" src="app.js"></script>
+    <script type="module" src="checkin.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then((registration) => {
+                    console.log('ServiceWorker Đăng ký thành công: ', registration.scope);
+                }).catch((error) => {
+                    console.log('ServiceWorker Lỗi đăng ký: ', error);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

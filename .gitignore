@@ -1,0 +1,8 @@
+node_modules/
+uploads/
+database.db
+database.db-shm
+database.db-wal
+database.db-journal
+.env
+.vercel/

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atendify - Dashboard Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header fade-in" style="text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1>Quản trị Sự kiện</h1>
+                <p>Khởi tạo event, trình chiếu QR động (Dynamic QR) và thống kê</p>
+            </div>
+            <a href="index.html" class="btn" style="width: auto; background: rgba(255,255,255,0.1);">🏠 Về trang chủ</a>
+        </div>
+
+        <div class="dashboard-grid fade-in">
+            <!-- Form Tạo Sự Kiện -->
+            <div class="glass-panel">
+                <div class="card-title">Tạo sự kiện mới</div>
+                <div class="input-group">
+                    <label>Tên sự kiện</label>
+                    <input type="text" id="event-name" class="input-field" placeholder="Ví dụ: Lễ Tốt nghiệp 2026">
+                </div>
+                <div class="input-group">
+                    <label>Vị trí GPS (Mặc định là hiện tại)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="event-lat" class="input-field" placeholder="Vĩ độ" readonly>
+                        <input type="text" id="event-lng" class="input-field" placeholder="Kinh độ" readonly>
+                        <button id="get-location-btn" class="btn" style="width: auto; padding: 0 16px;" title="Lấy vị trí hiện tại của thiết bị">📍</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Bán kính hợp lệ (mét)</label>
+                    <input type="number" id="event-radius" class="input-field" value="50">
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">Khoảng cách tối đa user có thể thực hiện check-in.</p>
+                </div>
+                <button id="create-event-btn" class="btn">Tạo Sự kiện</button>
+                <div id="event-message" class="mt-2 text-center" style="font-size: 0.875rem;"></div>
+            </div>
+
+            <!-- Mã QR Động -->
+            <div class="glass-panel" style="display: flex; flex-direction: column; align-items: center;">
+                <div class="card-title" style="width: 100%;">Trình chiếu QR Code 
+                    <span id="qr-refresh-timer" style="font-size: 0.8rem; color: var(--text-secondary);">--</span>
+                </div>
+                
+                <div id="qr-container" style="background: white; padding: 1.5rem; border-radius: 16px; margin-top: 1rem; width: 220px; height: 220px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 20px rgba(255,255,255,0.1);">
+                    <span style="color: #666; text-align: center; font-size: 0.9rem;">Vui lòng chọn sự kiện bên dưới để bắt đầu</span>
+                </div>
+                
+                <div style="width: 100%; margin-top: 2rem;">
+                    <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Sự kiện đang diễn ra:</label>
+                    <select id="active-event-select" class="input-field">
+                        <option value="">-- Chọn sự kiện --</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Danh sách người điểm danh -->
+            <div class="glass-panel" style="grid-column: 1 / -1;">
+                <div class="card-title">Live: Kết quả điểm danh
+                    <span style="font-size: 0.875rem; font-weight: normal; color: var(--primary-color);">Đang theo dõi theo thời gian thực</span>
+                </div>
+                
+                <div id="attendance-list" style="margin-top: 1rem; max-height: 400px; overflow-y: auto;">
+                    <p class="text-secondary">Chưa có kết quả. Vui lòng chọn sự kiện ở trên.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Thư viện tạo Mã QR (qrcodejs) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

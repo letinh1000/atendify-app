@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "public": true,
+  "name": "atendify-web",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ]
+}
