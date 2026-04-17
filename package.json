@@ -9,8 +9,6 @@
     "deploy": "vercel"
   },
   "dependencies": {
-    "@vercel/blob": "^2.3.3",
-    "@vercel/postgres": "^0.10.0",
-    "busboy": "^1.6.0"
+    "@supabase/supabase-js": "^2.103.3"
   }
 }

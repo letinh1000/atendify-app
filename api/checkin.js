@@ -1,10 +1,9 @@
-import { sql } from '@vercel/postgres';
-import { put } from '@vercel/blob';
+import { supabase } from './supabase.js';
 
 export const config = {
     api: {
         bodyParser: {
-            sizeLimit: '10mb', // Cho phép payload JSON lớn (để chứa base64)
+            sizeLimit: '10mb',
         },
     },
 };
@@ -22,25 +21,40 @@ export default async function handler(req, res) {
         const imageBuffer = Buffer.from(base64Data, 'base64');
         const filename = `${userId}-${eventId}-${Date.now()}.jpg`;
 
-        // Đẩy lên Vercel Blob
-        const blob = await put(filename, imageBuffer, {
-            access: 'public',
-            contentType: 'image/jpeg'
-        });
+        // 1. Upload ảnh lên Supabase Storage (Bucket tên là 'selfies')
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('selfies')
+            .upload(filename, imageBuffer, {
+                contentType: 'image/jpeg',
+                upsert: true
+            });
 
-        const selfieUrl = blob.url;
+        if (uploadError) throw uploadError;
 
-        // Lưu vào Postgres
-        await sql`
-            INSERT INTO attendances (userId, eventId, userName, phone, selfieUrl, timestamp)
-            VALUES (${userId}, ${eventId}, ${userName}, ${phone}, ${selfieUrl}, CURRENT_TIMESTAMP)
-            ON CONFLICT (userId, eventId) 
-            DO UPDATE SET selfieUrl = EXCLUDED.selfieUrl, timestamp = CURRENT_TIMESTAMP
-        `;
+        // 2. Lấy Public URL của ảnh vừa upload
+        const { data: { publicUrl } } = supabase.storage
+            .from('selfies')
+            .getPublicUrl(filename);
+
+        const selfieUrl = publicUrl;
+
+        // 3. Upsert vào bảng attendances
+        const { error: dbError } = await supabase
+            .from('attendances')
+            .upsert({
+                userId,
+                eventId,
+                userName,
+                phone,
+                selfieUrl,
+                timestamp: new Date().toISOString()
+            }, { onConflict: 'userId, eventId' });
+
+        if (dbError) throw dbError;
 
         res.json({ success: true, selfieUrl });
     } catch (e) {
-        console.error("Checkin Error:", e);
-        res.status(500).json({ error: "Lỗi lưu điểm danh", details: e.message });
+        console.error("Supabase Checkin Error:", e);
+        res.status(500).json({ error: "Lỗi lưu điểm danh lên Supabase", details: e.message });
     }
 }
