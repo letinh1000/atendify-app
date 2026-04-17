@@ -140,46 +140,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Biến thành file Blob Format
-        canvas.toBlob(async (blob) => {
-            if(!blob) return alert('Lỗi convert ảnh');
-            if(!currentUser) return alert('Bug: Mất Session User');
+        // Biến thành Base64 Data URL để gửi cho Vercel Serverless Function qua JSON payload
+        const base64Data = canvas.toDataURL('image/jpeg', 0.8);
+        if(!currentUser) return alert('Bug: Mất Session User');
 
-            try {
-                document.getElementById('take-selfie-btn').innerText = "⏳ Đang kết nối lên Backend...";
-                document.getElementById('take-selfie-btn').disabled = true;
+        try {
+            document.getElementById('take-selfie-btn').innerText = "⏳ Đang kết nối lên Backend...";
+            document.getElementById('take-selfie-btn').disabled = true;
 
-                // Chuẩn bị form dữ liệu (Đóng khung cho api /api/checkin)
-                const formData = new FormData();
-                formData.append('selfie', blob, 'selfie.jpg'); // Ảnh được lưu kèm thành file tên random
-                formData.append('eventId', currentEventId);
-                formData.append('userId', currentUser.id);
-                formData.append('userName', currentUser.fullName);
-                formData.append('phone', currentUser.phone);
+            // Đóng khung cho api /api/checkin dưới dạng JSON
+            const payload = {
+                eventId: currentEventId,
+                userId: currentUser.id,
+                userName: currentUser.fullName,
+                phone: currentUser.phone,
+                selfieBase64: base64Data
+            };
 
-                // Fetch Gủi POST không cần Header JSON để Browser báo cho Node là mảng multipart stream form
-                const req = await fetch(`${API_BASE}/api/checkin`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await req.json();
+            const req = await fetch(`${API_BASE}/api/checkin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await req.json();
 
-                if(result.success) {
-                    alert(`✅ HOÀN TẤT ĐIỂM DANH: ${currentEventInfo.name}`);
-                    closeScanner();
-                } else {
-                    alert("Gặp lỗi do Server Backend " + result.error);
-                }
-
-            } catch (e) {
-                console.error("Crashed Fetch", e);
-                alert("Không thể upload. Chắc Backend ko chạy!");
-            } finally {
-                document.getElementById('take-selfie-btn').innerText = "📸 Chụp ảnh ngay";
-                document.getElementById('take-selfie-btn').disabled = false;
+            if(result.success) {
+                alert(`✅ HOÀN TẤT ĐIỂM DANH: ${currentEventInfo.name}`);
+                closeScanner();
+            } else {
+                alert("Gặp lỗi do Server Backend " + result.error);
             }
-        }, 'image/jpeg', 0.8);
+
+        } catch (e) {
+            console.error("Crashed Fetch", e);
+            alert("Không thể upload. Chắc Backend ko chạy!");
+        } finally {
+            document.getElementById('take-selfie-btn').innerText = "📸 Chụp ảnh ngay";
+            document.getElementById('take-selfie-btn').disabled = false;
+        }
     });
 
 });

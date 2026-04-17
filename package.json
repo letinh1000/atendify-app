@@ -2,15 +2,15 @@
   "name": "atendify-backend",
   "version": "1.0.0",
   "description": "Custom Node Backend to replace Firebase",
-  "main": "server.js",
+  "main": "api/auth/send-otp.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "dev": "vercel dev",
+    "deploy": "vercel"
   },
   "dependencies": {
-    "better-sqlite3": "^9.6.0",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "multer": "^1.4.5-lts.1"
+    "@vercel/blob": "^2.3.3",
+    "@vercel/postgres": "^0.10.0",
+    "busboy": "^1.6.0"
   }
 }

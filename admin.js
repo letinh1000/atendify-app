@@ -122,50 +122,80 @@ document.addEventListener('DOMContentLoaded', () => {
         if (eventSource) { eventSource.close(); eventSource = null; }
     }
 
-    // 5. Kết nối TCP Event Source (Server-Sent Events) tới Nodejs để nghe log
-    let eventSource = null;
+    // 5. Polling HTTP thay cho SSE (Server-Sent Events) để tương thích Vercel Serverless
+    let pollingInterval = null;
+    let accumulatedHTML = '';
+    let lastKnownTimestamp = null;
     
     function listenToAttendance(eventId) {
-        if (eventSource) eventSource.close();
+        if (pollingInterval) clearInterval(pollingInterval);
         
         const listDiv = document.getElementById('attendance-list');
-        listDiv.innerHTML = '<p class="text-secondary text-center">Đang kết nối Server WebSocket...</p>';
+        listDiv.innerHTML = '<p class="text-secondary text-center">Đang kết nối Server Polling...</p>';
+        accumulatedHTML = '';
+        lastKnownTimestamp = null;
 
-        eventSource = new EventSource(`${API_BASE}/api/events/${eventId}/live`);
-        
-        let accumulatedHTML = '';
+        const fetchData = async () => {
+            try {
+                let url = `${API_BASE}/api/events/live?id=${eventId}`;
+                if (lastKnownTimestamp) {
+                    url += `&lastTimestamp=${encodeURIComponent(lastKnownTimestamp)}`;
+                }
+                
+                const req = await fetch(url);
+                if (!req.ok) return;
+                
+                const dataArr = await req.json();
+                
+                if (dataArr.length === 0 && accumulatedHTML === '') {
+                    listDiv.innerHTML = '<p class="text-secondary text-center" style="margin-top: 1rem;">Chưa có ai điểm danh!</p>';
+                    return;
+                }
+                
+                if (accumulatedHTML === '' && listDiv.innerHTML.includes('Đang kết nối')) {
+                    listDiv.innerHTML = '';
+                }
 
-        eventSource.onmessage = (event) => {
-            const dataArr = JSON.parse(event.data);
-            if(dataArr.length === 0 && accumulatedHTML === '') {
-                listDiv.innerHTML = '<p class="text-secondary text-center" style="margin-top: 1rem;">Chưa có ai điểm danh!</p>';
-                return;
-            }
-            
-            if (accumulatedHTML === '' && listDiv.innerHTML.includes('Đang kết nối')) {
-                listDiv.innerHTML = '';
-            }
-
-            dataArr.forEach(data => {
-                const timeStr = new Date(data.timestamp).toLocaleTimeString();
-                const rowHTML = `
-                    <div class="attendance-item fade-in">
-                        <img src="${data.selfieUrl}" alt="Selfie" onerror="this.src='https://via.placeholder.com/48'">
-                        <div class="attendance-info">
-                            <strong>${data.userName}</strong>
-                            <span class="attendance-time">🕒 Lúc ${timeStr} | ${data.phone}</span>
+                // Render in reverse so the newest is top if backend sorted DESC
+                dataArr.reverse().forEach(data => {
+                    const timeStr = new Date(data.timestamp).toLocaleTimeString();
+                    const rowHTML = `
+                        <div class="attendance-item fade-in">
+                            <img src="${data.selfieUrl}" alt="Selfie" onerror="this.src='https://via.placeholder.com/48'">
+                            <div class="attendance-info">
+                                <strong>${data.userName}</strong>
+                                <span class="attendance-time">🕒 Lúc ${timeStr} | ${data.phone}</span>
+                            </div>
+                            <div style="color: var(--success-color)">✓</div>
                         </div>
-                        <div style="color: var(--success-color)">✓</div>
-                    </div>
-                `;
-                // Đẩy ảnh lên đầu danh sách
-                accumulatedHTML = rowHTML + accumulatedHTML;
-            });
-            listDiv.innerHTML = accumulatedHTML;
+                    `;
+                    accumulatedHTML = rowHTML + accumulatedHTML;
+                    // Keep track of the latest so we only poll for new items next tick
+                    if (!lastKnownTimestamp || new Date(data.timestamp) > new Date(lastKnownTimestamp)) {
+                        lastKnownTimestamp = data.timestamp;
+                    }
+                });
+
+                if(dataArr.length > 0) {
+                    listDiv.innerHTML = accumulatedHTML;
+                }
+            } catch (e) {
+                console.error("Lỗi Polling Live:", e);
+            }
         };
-        
-        eventSource.onerror = () => {
-            console.error("Mất kết nối SSE. Thử lại sau...");
-        };
+
+        // Fetch immediately and then every 3 seconds
+        fetchData();
+        pollingInterval = setInterval(fetchData, 3000);
     }
+    
+    // Patch stopDynamicQR to also stop polling
+    const originalStopQR = stopDynamicQR;
+    stopDynamicQR = function() {
+        originalStopQR();
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    };
 });

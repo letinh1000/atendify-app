@@ -1,7 +1,5 @@
-// Đổi Endpoint tự động. Thay 'https://your-backend.onrender.com' thành URL backend thực tế của bạn sau khi deploy lên mây.
-const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" 
-    ? "http://127.0.0.1:3000" 
-    : "https://your-backend.onrender.com";
+// Gọi API tương đối trên Vercel
+const API_BASE = "";
 
 let currentUser = JSON.parse(localStorage.getItem('atendify_user'));
 
