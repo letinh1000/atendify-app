@@ -1,5 +1,10 @@
 import { API_BASE } from "./app.js";
 
+// Xác thực Quyền Admin độc lập
+if (!sessionStorage.getItem('admin_token')) {
+    window.location.href = 'admin-login.html';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     
     // 1. Phím tắt Lấy vị trí GPS cho Admin
@@ -19,6 +24,48 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             { enableHighAccuracy: true }
         );
+    });
+
+    // --- LOGIC QUẢN LÝ LỚP HỌC ---
+    const loadClasses = async () => {
+        try {
+            const req = await fetch(`${API_BASE}/api/classes`);
+            const classes = await req.json();
+            const ul = document.getElementById('class-list-ul');
+            ul.innerHTML = '';
+            if (classes.length === 0) return ul.innerHTML = '<li>Chưa có lớp nào</li>';
+            classes.forEach(c => {
+                const li = document.createElement('li');
+                li.innerText = `🏷️ ${c.name}`;
+                ul.appendChild(li);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    };
+    setTimeout(loadClasses, 100);
+
+    document.getElementById('create-class-btn').addEventListener('click', async () => {
+        const name = document.getElementById('class-name').value;
+        if (!name) return;
+        
+        document.getElementById('create-class-btn').disabled = true;
+        try {
+            const req = await fetch(`${API_BASE}/api/classes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (req.ok) {
+                document.getElementById('class-message').innerHTML = `<span style="color: var(--success-color);">Thành công!</span>`;
+                document.getElementById('class-name').value = '';
+                loadClasses();
+            }
+        } catch(e) {
+            alert("Lỗi Server");
+        } finally {
+            document.getElementById('create-class-btn').disabled = false;
+        }
     });
 
     // 2. Nút Tạo sự kiện mới gửi Request xuống Nodejs
@@ -42,13 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if(req.ok) {
-                document.getElementById('event-message').innerHTML = `<span style="color: var(--success-color);">Tạo thành công: ${name}</span>`;
+                document.getElementById('event-message').innerHTML = `<span style="color: var(--success-color);">Tạo thành công: ${name}</span>
+                <br><a href="projector.html?id=${await req.json().then(d => d.id)}" target="_blank" style="color: var(--primary-color); font-weight: bold; margin-top: 10px; display: inline-block;">👉 [MỞ MÁY CHIẾU MÃ QR CHO SỰ KIỆN NÀY]</a>`;
                 document.getElementById('event-name').value = '';
                 loadEvents(); // Reload ds
             }
         } catch(error) {
             console.error(error);
-            alert("Lỗi khi kết nối Nodejs tạo sự kiện. Bạn đã chạy node server.js chưa?");
+            alert("Lỗi khi kết nối Nodejs tạo sự kiện. Bạn đã cấu hình Supabase đúng chưa?");
         } finally {
             document.getElementById('create-event-btn').disabled = false;
             document.getElementById('create-event-btn').innerText = "Tạo Sự kiện";
@@ -75,52 +123,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(() => loadEvents(), 400); 
 
-    // 4. Logic sinh mã QR Động javascript
-    let qrGenerator = null;
-    let qrRefreshInterval = null;
-    let qrSecondsLeft = 15;
+    // 4. Liên kết nút Mở máy chiếu QR với sự kiện đang chọn
+    const projectorBtn = document.getElementById('projector-link-btn');
 
     document.getElementById('active-event-select').addEventListener('change', (e) => {
         const eventId = e.target.value;
         if (!eventId) {
-            stopDynamicQR();
+            projectorBtn.style.display = 'none';
+            if (pollingInterval) clearInterval(pollingInterval);
             return;
         }
-        startDynamicQR(eventId);
+        
+        projectorBtn.href = `projector.html?id=${eventId}`;
+        projectorBtn.style.display = 'flex';
+        
         listenToAttendance(eventId);
     });
-
-    function startDynamicQR(eventId) {
-        stopDynamicQR(); 
-        const container = document.getElementById('qr-container');
-        container.innerHTML = ''; 
-        qrGenerator = new QRCode(container, {
-            width: 200, height: 200, colorDark : "#0a0a0a", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H
-        });
-
-        const refreshQR = () => {
-            const timestamp = Date.now();
-            const token = `${eventId}|${timestamp}`;
-            qrGenerator.makeCode(token);
-            
-            qrSecondsLeft = 15;
-            document.getElementById('qr-refresh-timer').innerText = `Làm mới sau ${qrSecondsLeft}s`;
-        };
-
-        refreshQR();
-        qrRefreshInterval = setInterval(() => {
-            qrSecondsLeft--;
-            document.getElementById('qr-refresh-timer').innerText = `Làm mới sau ${qrSecondsLeft}s`;
-            if (qrSecondsLeft <= 0) refreshQR();
-        }, 1000);
-    }
-
-    function stopDynamicQR() {
-        if (qrRefreshInterval) clearInterval(qrRefreshInterval);
-        document.getElementById('qr-container').innerHTML = '<span style="color: #666; text-align: center; font-size: 0.9rem;">Vui lòng chọn sự kiện bên dưới để bắt đầu</span>';
-        document.getElementById('qr-refresh-timer').innerText = '--';
-        if (eventSource) { eventSource.close(); eventSource = null; }
-    }
 
     // 5. Polling HTTP thay cho SSE (Server-Sent Events) để tương thích Vercel Serverless
     let pollingInterval = null;

@@ -18,6 +18,23 @@
         </div>
 
         <div class="dashboard-grid fade-in">
+            <!-- Form Tạo Lớp học -->
+            <div class="glass-panel" style="border-left: 4px solid var(--primary-color);">
+                <div class="card-title">Quản lý Lớp học</div>
+                <div class="input-group">
+                    <label>Viết tắt / Mã Lớp (Ví dụ: KTPM-K15)</label>
+                    <input type="text" id="class-name" class="input-field" placeholder="Tên lớp học...">
+                </div>
+                <button id="create-class-btn" class="btn" style="background: var(--primary-color);">Tạo Lớp</button>
+                <div id="class-message" class="mt-2 text-center" style="font-size: 0.875rem;"></div>
+                
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                <label style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">Danh sách Lớp hiện có:</label>
+                <ul id="class-list-ul" style="list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; color: #ccc; font-size: 0.9rem; line-height: 1.6;">
+                    <li>Đang tải...</li>
+                </ul>
+            </div>
+
             <!-- Form Tạo Sự Kiện -->
             <div class="glass-panel">
                 <div class="card-title">Tạo sự kiện mới</div>
@@ -43,21 +60,19 @@
             </div>
 
             <!-- Mã QR Động -->
-            <div class="glass-panel" style="display: flex; flex-direction: column; align-items: center;">
-                <div class="card-title" style="width: 100%;">Trình chiếu QR Code 
-                    <span id="qr-refresh-timer" style="font-size: 0.8rem; color: var(--text-secondary);">--</span>
-                </div>
+            <div class="glass-panel" style="display: flex; flex-direction: column; align-items: center; border: 2px solid var(--primary-color);">
+                <div class="card-title" style="width: 100%;">Máy chiểu QR Động</div>
                 
-                <div id="qr-container" style="background: white; padding: 1.5rem; border-radius: 16px; margin-top: 1rem; width: 220px; height: 220px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 20px rgba(255,255,255,0.1);">
-                    <span style="color: #666; text-align: center; font-size: 0.9rem;">Vui lòng chọn sự kiện bên dưới để bắt đầu</span>
-                </div>
-                
-                <div style="width: 100%; margin-top: 2rem;">
+                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">Chọn một sự kiện đang được tổ chức và mở máy chiếu toàn màn hình để sinh viên quét.</p>
+
+                <div style="width: 100%; margin-top: 1rem;">
                     <label style="display: block; font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Sự kiện đang diễn ra:</label>
                     <select id="active-event-select" class="input-field">
                         <option value="">-- Chọn sự kiện --</option>
                     </select>
                 </div>
+
+                <a id="projector-link-btn" href="#" target="_blank" class="btn mt-4" style="background: var(--primary-color); display: none; text-decoration: none; align-items: center; justify-content: center;">🔗 KHỞI ĐỘNG MÁY CHIẾU</a>
             </div>
             
             <!-- Danh sách người điểm danh -->

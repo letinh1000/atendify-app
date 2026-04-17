@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atendify - QR Máy Chiếu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #111;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        p {
+            font-size: 1.5rem;
+            color: #aaa;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        #qr-box {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 24px;
+            box-shadow: 0 0 40px rgba(255,255,255,0.1);
+        }
+        #qr-timer-bar {
+            width: 100%;
+            max-width: 400px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+        #qr-progress {
+            height: 100%;
+            background: #4ade80;
+            width: 100%;
+            transition: width 1s linear;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="event-title">Đang tải sự kiện...</h1>
+    <p>Sử dụng App Sinh viên quét mã QR bên dưới để điểm danh</p>
+    
+    <div id="qr-box">
+        <div id="qr-container"></div>
+    </div>
+    
+    <div id="qr-timer-bar">
+        <div id="qr-progress"></div>
+    </div>
+
+    <!-- qrcode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="module">
+        import { API_BASE } from "./app.js";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('id');
+
+        if (!eventId) {
+            document.body.innerHTML = '<h1>Lỗi: Không tìm thấy Mã Sự kiện. Vui lòng quay lại màn hình Quản lý.</h1>';
+        } else {
+            // Tải thông tin event
+            fetch(`${API_BASE}/api/events/${eventId}`).then(r => r.json()).then(data => {
+                if(data.name) document.getElementById('event-title').innerText = "📍 " + data.name;
+            }).catch(e => console.error(e));
+
+            // Sinh mã QR
+            const container = document.getElementById('qr-container');
+            const qrGenerator = new QRCode(container, {
+                width: 350, height: 350, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H
+            });
+
+            let qrSecondsLeft = 15;
+            const progress = document.getElementById('qr-progress');
+
+            const refreshQR = () => {
+                const timestamp = Date.now();
+                const token = `${eventId}|${timestamp}`;
+                qrGenerator.makeCode(token);
+                qrSecondsLeft = 15;
+                progress.style.transition = 'none';
+                progress.style.width = '100%';
+                
+                setTimeout(() => {
+                    progress.style.transition = 'width 1s linear';
+                }, 50);
+            };
+
+            refreshQR();
+            setInterval(() => {
+                qrSecondsLeft--;
+                progress.style.width = `${(qrSecondsLeft / 15) * 100}%`;
+                if (qrSecondsLeft <= 0) refreshQR();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -45,6 +45,16 @@
                     <label for="fullname-input">Họ và tên</label>
                     <input type="text" id="fullname-input" class="input-field" placeholder="Ví dụ: Nguyễn Văn A" />
                 </div>
+                <div class="input-group">
+                    <label for="email-input">Email sinh viên</label>
+                    <input type="email" id="email-input" class="input-field" placeholder="Ví dụ: anv@edu.vn" />
+                </div>
+                <div class="input-group">
+                    <label for="class-select">Lớp học</label>
+                    <select id="class-select" class="input-field">
+                        <option value="">-- Đang tải danh sách lớp --</option>
+                    </select>
+                </div>
                 <button id="save-profile-btn" class="btn">Hoàn tất thiết lập</button>
             </div>
         </div>
@@ -83,9 +93,6 @@
                 <button id="cancel-scan-btn" class="btn mt-4" style="background: var(--error-color)">Hủy thao tác</button>
             </div>
             
-            <div id="admin-link-container" class="text-center mt-4 hidden">
-                <a href="admin.html" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">Chuyển sang Giao diện Admin &rarr;</a>
-            </div>
         </div>
     </div>
     

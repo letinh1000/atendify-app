@@ -5,10 +5,13 @@
   "main": "api/auth/send-otp.js",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "node -r dotenv/config local-dev.js",
     "deploy": "vercel"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.103.3"
+    "@supabase/supabase-js": "^2.103.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
   }
 }
